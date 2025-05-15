@@ -265,7 +265,7 @@
                 generateBtn.disabled = true;
                 generateBtn.textContent = 'Generating...';
 
-                // Create a new document
+                // Create a new document with a single section
                 const doc = new docx.Document({
                     sections: [{
                         properties: {},
@@ -291,40 +291,66 @@
                 // Add questions
                 let questionNumber = 1;
                 for (const [subdomain, questions] of Object.entries(groupedData)) {
+                    // Add subdomain heading
                     doc.addSection({
+                        properties: {
+                            type: docx.SectionType.CONTINUOUS
+                        },
                         children: [
                             new docx.Paragraph({
                                 text: `Sub Domain – ${subdomain}`,
-                                heading: docx.HeadingLevel.HEADING_2
+                                heading: docx.HeadingLevel.HEADING_2,
+                                spacing: {
+                                    after: 200
+                                }
                             })
                         ]
                     });
 
+                    // Add questions
                     for (const question of questions) {
                         doc.addSection({
+                            properties: {
+                                type: docx.SectionType.CONTINUOUS
+                            },
                             children: [
                                 new docx.Paragraph({
                                     text: `Complexity – ${question['Complexity'].charAt(0).toUpperCase() + question['Complexity'].slice(1)}`,
-                                    italics: true
+                                    italics: true,
+                                    spacing: {
+                                        after: 100
+                                    }
                                 }),
                                 new docx.Paragraph({
                                     text: `Q. ${questionNumber}) ${question['Question']}`,
-                                    bold: true
+                                    bold: true,
+                                    spacing: {
+                                        after: 100
+                                    }
                                 }),
                                 new docx.Paragraph({
-                                    text: `A) ${question['Choice1']}`
+                                    text: `A) ${question['Choice1']}`,
+                                    spacing: {
+                                        after: 50
+                                    }
                                 }),
                                 new docx.Paragraph({
-                                    text: `B) ${question['Choice2']}`
+                                    text: `B) ${question['Choice2']}`,
+                                    spacing: {
+                                        after: 50
+                                    }
                                 }),
                                 new docx.Paragraph({
-                                    text: `C) ${question['Choice3']}`
+                                    text: `C) ${question['Choice3']}`,
+                                    spacing: {
+                                        after: 50
+                                    }
                                 }),
                                 new docx.Paragraph({
-                                    text: `D) ${question['Choice4']}`
-                                }),
-                                new docx.Paragraph({
-                                    text: ""
+                                    text: `D) ${question['Choice4']}`,
+                                    spacing: {
+                                        after: 200
+                                    }
                                 })
                             ]
                         });
