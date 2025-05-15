@@ -304,15 +304,28 @@
                 generateBtn.disabled = true;
                 generateBtn.textContent = 'Generating...';
 
-                // Create a new document
+                // Create a new document with proper margins
                 const doc = new docx.Document({
                     sections: [{
-                        properties: {},
+                        properties: {
+                            page: {
+                                margin: {
+                                    top: 1440, // 1 inch in twips
+                                    right: 1440,
+                                    bottom: 1440,
+                                    left: 1440
+                                }
+                            }
+                        },
                         children: [
                             new docx.Paragraph({
                                 text: "MCQ Question Bank",
                                 heading: docx.HeadingLevel.HEADING_1,
-                                alignment: docx.AlignmentType.CENTER
+                                alignment: docx.AlignmentType.CENTER,
+                                spacing: {
+                                    after: 400,
+                                    before: 400
+                                }
                             })
                         ]
                     }]
@@ -330,6 +343,7 @@
                 // Add questions
                 let questionNumber = 1;
                 for (const [subdomain, questions] of Object.entries(groupedData)) {
+                    // Add subdomain heading with proper spacing
                     doc.addSection({
                         properties: {
                             type: docx.SectionType.CONTINUOUS
@@ -339,7 +353,16 @@
                                 text: `Sub Domain – ${subdomain}`,
                                 heading: docx.HeadingLevel.HEADING_2,
                                 spacing: {
-                                    after: 200
+                                    after: 300,
+                                    before: 300
+                                },
+                                border: {
+                                    bottom: {
+                                        color: "auto",
+                                        space: 1,
+                                        style: docx.BorderStyle.SINGLE,
+                                        size: 6
+                                    }
                                 }
                             })
                         ]
@@ -351,42 +374,91 @@
                                 type: docx.SectionType.CONTINUOUS
                             },
                             children: [
+                                // Complexity level with proper formatting
                                 new docx.Paragraph({
                                     text: `Complexity – ${question['Complexity'].charAt(0).toUpperCase() + question['Complexity'].slice(1)}`,
                                     italics: true,
                                     spacing: {
-                                        after: 100
-                                    }
+                                        after: 200,
+                                        before: 200
+                                    },
+                                    color: "666666"
                                 }),
+                                // Question with proper formatting
                                 new docx.Paragraph({
                                     text: `Q. ${questionNumber}) ${question['Question']}`,
                                     bold: true,
                                     spacing: {
-                                        after: 100
+                                        after: 200,
+                                        before: 100
+                                    },
+                                    indent: {
+                                        left: 360 // 0.25 inch in twips
+                                    }
+                                }),
+                                // Choices with proper formatting and alignment
+                                new docx.Paragraph({
+                                    children: [
+                                        new docx.TextRun({
+                                            text: "A) ",
+                                            bold: true
+                                        }),
+                                        new docx.TextRun(question['Choice1'])
+                                    ],
+                                    spacing: {
+                                        after: 100,
+                                        before: 50
+                                    },
+                                    indent: {
+                                        left: 720 // 0.5 inch in twips
                                     }
                                 }),
                                 new docx.Paragraph({
-                                    text: `A) ${question['Choice1']}`,
+                                    children: [
+                                        new docx.TextRun({
+                                            text: "B) ",
+                                            bold: true
+                                        }),
+                                        new docx.TextRun(question['Choice2'])
+                                    ],
                                     spacing: {
-                                        after: 50
+                                        after: 100,
+                                        before: 50
+                                    },
+                                    indent: {
+                                        left: 720
                                     }
                                 }),
                                 new docx.Paragraph({
-                                    text: `B) ${question['Choice2']}`,
+                                    children: [
+                                        new docx.TextRun({
+                                            text: "C) ",
+                                            bold: true
+                                        }),
+                                        new docx.TextRun(question['Choice3'])
+                                    ],
                                     spacing: {
-                                        after: 50
+                                        after: 100,
+                                        before: 50
+                                    },
+                                    indent: {
+                                        left: 720
                                     }
                                 }),
                                 new docx.Paragraph({
-                                    text: `C) ${question['Choice3']}`,
+                                    children: [
+                                        new docx.TextRun({
+                                            text: "D) ",
+                                            bold: true
+                                        }),
+                                        new docx.TextRun(question['Choice4'])
+                                    ],
                                     spacing: {
-                                        after: 50
-                                    }
-                                }),
-                                new docx.Paragraph({
-                                    text: `D) ${question['Choice4']}`,
-                                    spacing: {
-                                        after: 200
+                                        after: 300,
+                                        before: 50
+                                    },
+                                    indent: {
+                                        left: 720
                                     }
                                 })
                             ]
