@@ -1,19 +1,52 @@
-# MCQ Question Bank Generator
+# CSV to Word Document Converter
 
-A web-based tool that converts CSV files containing MCQ questions into formatted Word documents. This tool runs entirely in the browser, with no server-side processing required.
+A Python application that converts CSV files containing Multiple Choice Questions (MCQs) into formatted Word documents.
 
 ## Features
 
-- Upload CSV files containing MCQ questions
-- Generate formatted Word documents (.docx)
-- Organize questions by subdomain
-- Modern, responsive UI
-- Works entirely in the browser
-- No server required
+- User-friendly GUI interface
+- Converts CSV files to formatted Word documents
+- Groups questions by subdomain
+- Includes complexity levels for each question
+- Formats questions with multiple choice options
+- Simple and intuitive interface
+
+## Requirements
+
+- Python 3.x
+- Required Python packages:
+  - tkinter
+  - pandas
+  - python-docx
+
+## Installation
+
+1. Clone this repository:
+```bash
+git clone https://github.com/yourusername/CSV-to-Docs.git
+cd CSV-to-Docs
+```
+
+2. Install the required packages:
+```bash
+pip install pandas python-docx
+```
+
+## Usage
+
+1. Run the application:
+```bash
+python main.py
+```
+
+2. In the GUI:
+   - Click "Browse CSV" to select your input CSV file
+   - Click "Save As" to choose where to save the Word document
+   - Click "Generate Word Document" to create the document
 
 ## CSV Format
 
-The input CSV file should have the following columns:
+Your CSV file should have the following columns:
 - Sub-domain
 - Complexity
 - Question
@@ -22,26 +55,18 @@ The input CSV file should have the following columns:
 - Choice3
 - Choice4
 
-## Usage
+## Output Format
 
-1. Open the webpage
-2. Click "Choose File" to select your CSV file
-3. Click "Generate Word Document"
-4. The document will be automatically downloaded
+The generated Word document will include:
+- A main heading "MCQ Question Bank"
+- Questions grouped by subdomain
+- Complexity level for each question
+- Question text with four multiple choice options
 
-## Technologies Used
+## Contributing
 
-- HTML5
-- CSS3
-- JavaScript
-- Bootstrap 5
-- docx.js for document generation
-- FileSaver.js for file downloads
-
-## Live Demo
-
-Visit the [GitHub Pages site](https://your-username.github.io/mcq-generator) to try it out!
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License
+This project is licensed under the MIT License - see the LICENSE file for details.
