@@ -1,0 +1,5 @@
+Sub-domain,Complexity,Question,Choice1,Choice2,Choice3,Choice4
+Python Basics,Medium,What is the output of print(type(1/2))?,<class 'float'>,<class 'int'>,<class 'number'>,<class 'decimal'>
+Python Basics,Easy,Which of the following is a valid Python variable name?,my_variable,123variable,my-variable,@variable
+Data Structures,Hard,What is the time complexity of binary search?,O(log n),O(n),O(n log n),O(1)
+Data Structures,Medium,Which data structure uses LIFO principle?,Stack,Queue,Tree,Graph 
