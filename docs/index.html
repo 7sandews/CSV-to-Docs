@@ -8,7 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             background: #fff;
@@ -104,9 +103,6 @@
             <div class="text-center mt-3">
                 <button class="btn btn-primary" onclick="generateDocx()" id="generateBtn" disabled>
                     Generate Word Document
-                </button>
-                <button class="btn btn-outline-secondary ms-2" onclick="generatePDF()" id="pdfBtn" disabled>
-                    Download as PDF
                 </button>
             </div>
         </div>
@@ -256,7 +252,6 @@
                         if (validateCSV(csvData)) {
                             showPreview(results.data);
                             document.getElementById('generateBtn').disabled = false;
-                            document.getElementById('pdfBtn').disabled = false;
                             showSuccess(`Successfully loaded ${results.data.length} questions`);
                         }
                     },
@@ -510,77 +505,6 @@
                 generateBtn.disabled = false;
                 generateBtn.textContent = 'Generate Word Document';
             }
-        }
-
-        async function generatePDF() {
-            if (!csvData) return;
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-            const pageWidth = doc.internal.pageSize.getWidth();
-            let y = 60;
-            // Add logo if available
-            try {
-                const img = new Image();
-                img.src = 'Logo.png';
-                await new Promise((resolve, reject) => {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                });
-                doc.addImage(img, 'PNG', pageWidth - 120, 20, 100, 40);
-            } catch (e) {}
-            // Title
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(22);
-            doc.setTextColor(28, 73, 128);
-            doc.text('MCQ Question Bank', 40, y);
-            y += 40;
-            // Group by subdomain
-            const groupedData = {};
-            csvData.forEach(row => {
-                if (!groupedData[row['Sub-domain']]) groupedData[row['Sub-domain']] = [];
-                groupedData[row['Sub-domain']].push(row);
-            });
-            let questionNumber = 1;
-            const maxWidth = pageWidth - 100; // leave margin
-            for (const [subdomain, questions] of Object.entries(groupedData)) {
-                if (y > 700) { doc.addPage(); y = 60; }
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.setTextColor(28, 73, 128);
-                doc.text(`Sub Domain – ${subdomain}`, 40, y);
-                y += 28;
-                for (const question of questions) {
-                    if (y > 750) { doc.addPage(); y = 60; }
-                    doc.setFont('helvetica', 'italic');
-                    doc.setFontSize(12);
-                    doc.setTextColor(28, 73, 128);
-                    doc.text(`Complexity – ${question['Complexity'].charAt(0).toUpperCase() + question['Complexity'].slice(1)}`, 50, y);
-                    y += 18;
-                    doc.setDrawColor(28, 73, 128);
-                    doc.setLineWidth(1);
-                    doc.line(40, y, pageWidth - 40, y);
-                    y += 12;
-                    // Wrap question text
-                    const questionLines = doc.splitTextToSize(`Q. ${questionNumber}) ${question['Question']}`, maxWidth - 60);
-                    doc.text(questionLines, 60, y);
-                    y += questionLines.length * 16;
-                    doc.setFont('helvetica', 'normal');
-                    // Wrap each choice
-                    ['Choice1', 'Choice2', 'Choice3', 'Choice4'].forEach((choice, idx) => {
-                        const choiceText = `${String.fromCharCode(65 + idx)}) ${question[choice]}`;
-                        const choiceLines = doc.splitTextToSize(choiceText, maxWidth - 80);
-                        doc.text(choiceLines, 80, y);
-                        y += choiceLines.length * 16;
-                    });
-                    y += 8;
-                    // Check for page break
-                    if (y > 750) { doc.addPage(); y = 60; }
-                    questionNumber++;
-                }
-                y += 10;
-            }
-            doc.save('MCQ_Question_Bank.pdf');
-            showSuccess('PDF generated successfully!');
         }
     </script>
     <footer class="footer-legal text-center">
