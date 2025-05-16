@@ -42,6 +42,49 @@
             font-size: 2rem;
             margin-bottom: 1rem;
         }
+        /* New styles for rectangles */
+        .feature-card {
+            background: #f4f8fb;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(28,73,128,0.07);
+            padding: 2rem 1rem 1.5rem 1rem;
+            margin: 0 0.5rem 1.5rem 0.5rem;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: box-shadow 0.2s;
+        }
+        .feature-card:hover {
+            box-shadow: 0 4px 24px rgba(28,73,128,0.13);
+        }
+        .info-card {
+            background: #f4f8fb;
+            border-radius: 18px;
+            box-shadow: 0 2px 16px rgba(28,73,128,0.09);
+            padding: 2.5rem 2rem 2rem 2rem;
+            margin: 1rem 0.5rem 2rem 0.5rem;
+            min-height: 320px;
+            transition: box-shadow 0.2s;
+        }
+        .info-card h2 {
+            color: #1C4980;
+            font-weight: 600;
+        }
+        @media (max-width: 991px) {
+            .feature-card { margin-bottom: 1.5rem; }
+            .info-card { margin-bottom: 2rem; }
+        }
+        .footer-legal {
+            font-size: 0.95rem;
+            color: #888;
+            background: #f4f8fb;
+            border-top: 1px solid #e0e6ed;
+            padding: 1.2rem 0 1rem 0;
+            margin-top: 3rem;
+            letter-spacing: 0.01em;
+        }
     </style>
   </head>
   <body>
@@ -78,46 +121,56 @@
 
         <div class="row mb-5 text-center">
             <div class="col-md-4 mb-4 mb-md-0">
-                <div class="feature-icon">🌐</div>
-                <h3>Browser-Based</h3>
-                <p>No installation required - works directly in your browser</p>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Browser-Based</h3>
+                    <p>No installation required - works directly in your browser</p>
+                </div>
             </div>
             <div class="col-md-4 mb-4 mb-md-0">
-                <div class="feature-icon">📊</div>
-                <h3>Organized Output</h3>
-                <p>Questions are automatically grouped by subdomain</p>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Organized Output</h3>
+                    <p>Questions are automatically grouped by subdomain</p>
+                </div>
             </div>
             <div class="col-md-4">
-                <div class="feature-icon">🔒</div>
-                <h3>Private & Secure</h3>
-                <p>Your files never leave your computer</p>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Private & Secure</h3>
+                    <p>Your files never leave your computer</p>
+                </div>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
-                <h2>CSV Format</h2>
-                <p>Your CSV file should include these columns:</p>
-                <ul>
-                    <li>Sub-domain</li>
-                    <li>Complexity</li>
-                    <li>Question</li>
-                    <li>Choice1</li>
-                    <li>Choice2</li>
-                    <li>Choice3</li>
-                    <li>Choice4</li>
-                </ul>
-                <p>Download our <a href="example.csv">example CSV file</a> to see the format.</p>
+                <div class="info-card">
+                    <h2>CSV Format</h2>
+                    <p>Your CSV file should include these columns:</p>
+                    <ul>
+                        <li>Sub-domain</li>
+                        <li>Complexity</li>
+                        <li>Question</li>
+                        <li>Choice1</li>
+                        <li>Choice2</li>
+                        <li>Choice3</li>
+                        <li>Choice4</li>
+                    </ul>
+                    <p>Download our <a href="example.csv">example CSV file</a> to see the format.</p>
+                </div>
             </div>
             <div class="col-md-6">
-                <h2>Output Format</h2>
-                <p>The generated Word document will include:</p>
-                <ul>
-                    <li>A main heading "MCQ Question Bank"</li>
-                    <li>Questions grouped by subdomain</li>
-                    <li>Complexity level for each question</li>
-                    <li>Question text with four multiple choice options</li>
-                </ul>
+                <div class="info-card">
+                    <h2>Output Format</h2>
+                    <p>The generated Word document will include:</p>
+                    <ul>
+                        <li>A main heading "MCQ Question Bank"</li>
+                        <li>Questions grouped by subdomain</li>
+                        <li>Complexity level for each question</li>
+                        <li>Question text with four multiple choice options</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -252,7 +305,7 @@
                 generateBtn.textContent = 'Generating...';
 
                 // Define blue color
-                const blue = '2563eb';
+                const blue = '#1C4980';
 
                 // Create a new document with proper margins
                 const doc = new docx.Document({
@@ -410,5 +463,8 @@
             }
         }
     </script>
+    <footer class="footer-legal text-center">
+        Created by Soumya Ranjan &copy; 2025. All rights reserved.
+    </footer>
   </body>
 </html>
