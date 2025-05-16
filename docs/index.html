@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV to Word Document Converter</title>
+    <title>CSV-DOC Converter</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -85,23 +85,46 @@
             margin-top: 3rem;
             letter-spacing: 0.01em;
         }
+        .mode-selector {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .mode-selector select {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #1C4980;
+            background-color: white;
+            color: #1C4980;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-selector select:hover {
+            background-color: #f4f8fb;
+        }
     </style>
   </head>
   <body>
     <div class="container py-5">
         <header class="text-center mb-5">
-            <h1>CSV to Word Document Converter</h1>
-            <p class="lead">Convert your MCQ CSV files into formatted Word documents directly in your browser</p>
+            <h1>CSV-DOC Converter</h1>
+            <p class="lead">Convert between CSV and Word document formats directly in your browser</p>
         </header>
 
         <div class="upload-section mx-auto" style="max-width: 600px;">
-            <h3 class="text-center mb-4">Upload Your CSV File</h3>
-            <input type="file" class="form-control mb-2" id="csvFile" accept=".csv">
+            <div class="mode-selector">
+                <select id="conversionMode" onchange="updateMode()">
+                    <option value="csv2doc">CSV to Word Document</option>
+                    <option value="doc2csv">Word Document to CSV</option>
+                </select>
+            </div>
+            <h3 class="text-center mb-4" id="uploadTitle">Upload Your CSV File</h3>
+            <input type="file" class="form-control mb-2" id="inputFile" accept=".csv">
             <div class="file-info" id="fileInfo"></div>
             <div class="alert alert-danger" id="errorAlert" role="alert"></div>
             <div class="alert alert-success" id="successAlert" role="alert"></div>
             <div class="text-center mt-3">
-                <button class="btn btn-primary" onclick="generateDocx()" id="generateBtn" disabled>
+                <button class="btn btn-primary" onclick="handleConversion()" id="generateBtn" disabled>
                     Generate Word Document
                 </button>
             </div>
@@ -109,7 +132,7 @@
 
         <div id="preview" class="row justify-content-center">
             <div class="col-12 col-md-10">
-                <h3>CSV Preview</h3>
+                <h3 id="previewTitle">CSV Preview</h3>
                 <div class="preview-table">
                     <table class="table table-striped table-bordered">
                         <thead id="previewHeader"></thead>
@@ -146,9 +169,9 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="info-card">
-                    <h2>CSV Format</h2>
-                    <p>Your CSV file should include these columns:</p>
-                    <ul>
+                    <h2 id="formatTitle">CSV Format</h2>
+                    <p id="formatDescription">Your CSV file should include these columns:</p>
+                    <ul id="formatList">
                         <li>Sub-domain</li>
                         <li>Complexity</li>
                         <li>Question</li>
@@ -162,9 +185,9 @@
             </div>
             <div class="col-md-6">
                 <div class="info-card">
-                    <h2>Output Format</h2>
-                    <p>The generated Word document will include:</p>
-                    <ul>
+                    <h2 id="outputTitle">Output Format</h2>
+                    <p id="outputDescription">The generated Word document will include:</p>
+                    <ul id="outputList">
                         <li>A main heading "MCQ Question Bank"</li>
                         <li>Questions grouped by subdomain</li>
                         <li>Complexity level for each question</li>
@@ -176,8 +199,77 @@
     </div>
 
     <script>
-        let csvData = null;
+        let inputData = null;
         const requiredColumns = ['Sub-domain', 'Complexity', 'Question', 'Choice1', 'Choice2', 'Choice3', 'Choice4'];
+
+        function updateMode() {
+            const mode = document.getElementById('conversionMode').value;
+            const inputFile = document.getElementById('inputFile');
+            const uploadTitle = document.getElementById('uploadTitle');
+            const previewTitle = document.getElementById('previewTitle');
+            const formatTitle = document.getElementById('formatTitle');
+            const formatDescription = document.getElementById('formatDescription');
+            const formatList = document.getElementById('formatList');
+            const outputTitle = document.getElementById('outputTitle');
+            const outputDescription = document.getElementById('outputDescription');
+            const outputList = document.getElementById('outputList');
+            const generateBtn = document.getElementById('generateBtn');
+
+            // Reset state
+            inputData = null;
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('successAlert').style.display = 'none';
+            document.getElementById('fileInfo').textContent = '';
+            generateBtn.disabled = true;
+
+            if (mode === 'csv2doc') {
+                inputFile.accept = '.csv';
+                uploadTitle.textContent = 'Upload Your CSV File';
+                previewTitle.textContent = 'CSV Preview';
+                formatTitle.textContent = 'CSV Format';
+                formatDescription.textContent = 'Your CSV file should include these columns:';
+                formatList.innerHTML = `
+                    <li>Sub-domain</li>
+                    <li>Complexity</li>
+                    <li>Question</li>
+                    <li>Choice1</li>
+                    <li>Choice2</li>
+                    <li>Choice3</li>
+                    <li>Choice4</li>
+                `;
+                outputTitle.textContent = 'Output Format';
+                outputDescription.textContent = 'The generated Word document will include:';
+                outputList.innerHTML = `
+                    <li>A main heading "MCQ Question Bank"</li>
+                    <li>Questions grouped by subdomain</li>
+                    <li>Complexity level for each question</li>
+                    <li>Question text with four multiple choice options</li>
+                `;
+                generateBtn.textContent = 'Generate Word Document';
+            } else {
+                inputFile.accept = '.docx';
+                uploadTitle.textContent = 'Upload Your Word Document';
+                previewTitle.textContent = 'Document Preview';
+                formatTitle.textContent = 'Word Document Format';
+                formatDescription.textContent = 'Your Word document should follow this structure:';
+                formatList.innerHTML = `
+                    <li>Main heading "MCQ Question Bank"</li>
+                    <li>Subdomain headings</li>
+                    <li>Complexity level for each question</li>
+                    <li>Questions with A, B, C, D options</li>
+                `;
+                outputTitle.textContent = 'CSV Output';
+                outputDescription.textContent = 'The generated CSV will include:';
+                outputList.innerHTML = `
+                    <li>Sub-domain column</li>
+                    <li>Complexity column</li>
+                    <li>Question column</li>
+                    <li>Four choice columns (Choice1-4)</li>
+                `;
+                generateBtn.textContent = 'Generate CSV File';
+            }
+        }
 
         function showError(message) {
             const errorAlert = document.getElementById('errorAlert');
@@ -208,7 +300,6 @@
                 return false;
             }
 
-            // Check for empty values in required fields
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
                 for (const col of requiredColumns) {
@@ -222,23 +313,24 @@
             return true;
         }
 
-        document.getElementById('csvFile').addEventListener('change', function(e) {
+        document.getElementById('inputFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (file) {
-                // Show file info
-                const fileInfo = document.getElementById('fileInfo');
-                fileInfo.textContent = `Selected file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            if (!file) return;
 
-                // Reset alerts
-                document.getElementById('errorAlert').style.display = 'none';
-                document.getElementById('successAlert').style.display = 'none';
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.textContent = `Selected file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
 
-                // Check file size (limit to 10MB)
-                if (file.size > 10 * 1024 * 1024) {
-                    showError('File size exceeds 10MB limit');
-                    return;
-                }
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('successAlert').style.display = 'none';
 
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size exceeds 10MB limit');
+                return;
+            }
+
+            const mode = document.getElementById('conversionMode').value;
+            
+            if (mode === 'csv2doc') {
                 Papa.parse(file, {
                     header: true,
                     skipEmptyLines: true,
@@ -248,8 +340,8 @@
                             return;
                         }
 
-                        csvData = results.data;
-                        if (validateCSV(csvData)) {
+                        inputData = results.data;
+                        if (validateCSV(inputData)) {
                             showPreview(results.data);
                             document.getElementById('generateBtn').disabled = false;
                             showSuccess(`Successfully loaded ${results.data.length} questions`);
@@ -259,6 +351,16 @@
                         showError('Error reading file: ' + error.message);
                     }
                 });
+            } else {
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const doc = new docx.Document(arrayBuffer);
+                    inputData = doc;
+                    document.getElementById('generateBtn').disabled = false;
+                    showSuccess('Word document loaded successfully');
+                } catch (error) {
+                    showError('Error reading Word document: ' + error.message);
+                }
             }
         });
 
@@ -267,11 +369,9 @@
             const header = document.getElementById('previewHeader');
             const body = document.getElementById('previewBody');
             
-            // Clear previous preview
             header.innerHTML = '';
             body.innerHTML = '';
             
-            // Add headers
             const headerRow = document.createElement('tr');
             Object.keys(data[0]).forEach(key => {
                 const th = document.createElement('th');
@@ -280,7 +380,6 @@
             });
             header.appendChild(headerRow);
             
-            // Add first 5 rows
             data.slice(0, 5).forEach(row => {
                 const tr = document.createElement('tr');
                 Object.values(row).forEach(value => {
@@ -294,8 +393,70 @@
             preview.style.display = 'block';
         }
 
+        async function handleConversion() {
+            const mode = document.getElementById('conversionMode').value;
+            if (mode === 'csv2doc') {
+                await generateDocx();
+            } else {
+                await generateCSV();
+            }
+        }
+
+        async function generateCSV() {
+            if (!inputData) return;
+
+            try {
+                const generateBtn = document.getElementById('generateBtn');
+                generateBtn.disabled = true;
+                generateBtn.textContent = 'Generating...';
+
+                const data = [];
+                let currentQuestion = {};
+                
+                for (const paragraph of inputData.paragraphs) {
+                    const text = paragraph.text.trim();
+                    if (!text) continue;
+                    
+                    if (text.startsWith("Sub Domain –")) {
+                        currentQuestion['Sub-domain'] = text.replace("Sub Domain –", "").trim();
+                    } else if (text.startsWith("Complexity –")) {
+                        currentQuestion['Complexity'] = text.replace("Complexity –", "").trim().toLowerCase();
+                    } else if (text.startsWith("Q.")) {
+                        if (Object.keys(currentQuestion).length > 0) {
+                            data.push(currentQuestion);
+                        }
+                        currentQuestion = {'Question': text.split(")", 1)[1].trim()};
+                    } else if (text.startsWith("A)")) {
+                        currentQuestion['Choice1'] = text.substring(2).trim();
+                    } else if (text.startsWith("B)")) {
+                        currentQuestion['Choice2'] = text.substring(2).trim();
+                    } else if (text.startsWith("C)")) {
+                        currentQuestion['Choice3'] = text.substring(2).trim();
+                    } else if (text.startsWith("D)")) {
+                        currentQuestion['Choice4'] = text.substring(2).trim();
+                    }
+                }
+                
+                if (Object.keys(currentQuestion).length > 0) {
+                    data.push(currentQuestion);
+                }
+
+                const csv = Papa.unparse(data);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                saveAs(blob, "MCQ_Questions.csv");
+                showSuccess("CSV file generated successfully!");
+            } catch (error) {
+                showError("Error generating CSV: " + error.message);
+                console.error("CSV generation error:", error);
+            } finally {
+                const generateBtn = document.getElementById('generateBtn');
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate CSV File';
+            }
+        }
+
         async function generateDocx() {
-            if (!csvData) return;
+            if (!inputData) return;
 
             try {
                 // Show loading state
@@ -382,16 +543,20 @@
 
                 // Group by subdomain
                 const groupedData = {};
-                csvData.forEach(row => {
-                    if (!groupedData[row['Sub-domain']]) {
-                        groupedData[row['Sub-domain']] = [];
+                inputData.paragraphs.forEach(paragraph => {
+                    const text = paragraph.text.trim();
+                    if (text.startsWith("Sub Domain –")) {
+                        const subdomain = text.replace("Sub Domain –", "").trim();
+                        if (!groupedData[subdomain]) {
+                            groupedData[subdomain] = [];
+                        }
+                        groupedData[subdomain].push(paragraph);
                     }
-                    groupedData[row['Sub-domain']].push(row);
                 });
 
                 // Add questions
                 let questionNumber = 1;
-                for (const [subdomain, questions] of Object.entries(groupedData)) {
+                for (const [subdomain, paragraphs] of Object.entries(groupedData)) {
                     // Subdomain heading
                     doc.addSection({
                         properties: { type: docx.SectionType.CONTINUOUS },
@@ -412,7 +577,7 @@
                         ]
                     });
 
-                    for (const question of questions) {
+                    for (const paragraph of paragraphs) {
                         // Complexity line (italic, blue)
                         doc.addSection({
                             properties: { type: docx.SectionType.CONTINUOUS },
@@ -421,7 +586,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({
-                                            text: `Complexity – ${question['Complexity'].charAt(0).toUpperCase() + question['Complexity'].slice(1)}`,
+                                            text: `Complexity – ${paragraph.text.charAt(0).toUpperCase() + paragraph.text.slice(1)}`,
                                             italics: true,
                                             color: blue,
                                             size: 24 // 12pt
@@ -445,7 +610,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({
-                                            text: `Q. ${questionNumber}) ${question['Question']}`,
+                                            text: `Q. ${questionNumber}) ${paragraph.text.split(")", 1)[1].trim()}`,
                                             bold: true,
                                             size: 24 // 12pt
                                         })
@@ -457,7 +622,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({ text: "A) ", bold: true, size: 24 }),
-                                        new docx.TextRun({ text: question['Choice1'], size: 24 })
+                                        new docx.TextRun({ text: paragraph.text.split("A) ")[1].split(")")[0], size: 24 })
                                     ],
                                     spacing: { after: 100, before: 50 },
                                     indent: { left: 720 }
@@ -465,7 +630,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({ text: "B) ", bold: true, size: 24 }),
-                                        new docx.TextRun({ text: question['Choice2'], size: 24 })
+                                        new docx.TextRun({ text: paragraph.text.split("B) ")[1].split(")")[0], size: 24 })
                                     ],
                                     spacing: { after: 100, before: 50 },
                                     indent: { left: 720 }
@@ -473,7 +638,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({ text: "C) ", bold: true, size: 24 }),
-                                        new docx.TextRun({ text: question['Choice3'], size: 24 })
+                                        new docx.TextRun({ text: paragraph.text.split("C) ")[1].split(")")[0], size: 24 })
                                     ],
                                     spacing: { after: 100, before: 50 },
                                     indent: { left: 720 }
@@ -481,7 +646,7 @@
                                 new docx.Paragraph({
                                     children: [
                                         new docx.TextRun({ text: "D) ", bold: true, size: 24 }),
-                                        new docx.TextRun({ text: question['Choice4'], size: 24 })
+                                        new docx.TextRun({ text: paragraph.text.split("D) ")[1].split(")")[0], size: 24 })
                                     ],
                                     spacing: { after: 300, before: 50 },
                                     indent: { left: 720 }
