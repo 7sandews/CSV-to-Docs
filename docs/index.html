@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/docx@7.1.0/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             background: #fff;
@@ -103,6 +104,9 @@
             <div class="text-center mt-3">
                 <button class="btn btn-primary" onclick="generateDocx()" id="generateBtn" disabled>
                     Generate Word Document
+                </button>
+                <button class="btn btn-outline-secondary ms-2" onclick="generatePDF()" id="pdfBtn" disabled>
+                    Download as PDF
                 </button>
             </div>
         </div>
@@ -252,6 +256,7 @@
                         if (validateCSV(csvData)) {
                             showPreview(results.data);
                             document.getElementById('generateBtn').disabled = false;
+                            document.getElementById('pdfBtn').disabled = false;
                             showSuccess(`Successfully loaded ${results.data.length} questions`);
                         }
                     },
@@ -307,7 +312,46 @@
                 // Define blue color
                 const blue = '#1C4980';
 
-                // Create a new document with proper margins
+                // Helper to get base64 logo
+                async function getLogoBase64() {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/png').split(',')[1]);
+                        };
+                        img.onerror = reject;
+                        img.src = '../Logo.png';
+                    });
+                }
+
+                // Get logo base64
+                const logoBase64 = await getLogoBase64();
+
+                // Create logo ImageRun
+                const logoImage = new docx.ImageRun({
+                    data: Uint8Array.from(atob(logoBase64), c => c.charCodeAt(0)),
+                    transformation: { width: 80, height: 80 }, // Adjust size as needed
+                });
+
+                // Helper to create header with logo
+                function createHeaderWithLogo() {
+                    return new docx.Header({
+                        children: [
+                            new docx.Paragraph({
+                                children: [logoImage],
+                                alignment: docx.AlignmentType.RIGHT,
+                            })
+                        ]
+                    });
+                }
+
+                // Create a new document with proper margins and header
                 const doc = new docx.Document({
                     sections: [{
                         properties: {
@@ -319,6 +363,9 @@
                                     left: 1440
                                 }
                             }
+                        },
+                        headers: {
+                            default: createHeaderWithLogo()
                         },
                         children: [
                             new docx.Paragraph({
@@ -353,6 +400,7 @@
                     // Subdomain heading
                     doc.addSection({
                         properties: { type: docx.SectionType.CONTINUOUS },
+                        headers: { default: createHeaderWithLogo() },
                         children: [
                             new docx.Paragraph({
                                 children: [
@@ -373,6 +421,7 @@
                         // Complexity line (italic, blue)
                         doc.addSection({
                             properties: { type: docx.SectionType.CONTINUOUS },
+                            headers: { default: createHeaderWithLogo() },
                             children: [
                                 new docx.Paragraph({
                                     children: [
@@ -461,6 +510,71 @@
                 generateBtn.disabled = false;
                 generateBtn.textContent = 'Generate Word Document';
             }
+        }
+
+        async function generatePDF() {
+            if (!csvData) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 60;
+            // Add logo if available
+            try {
+                const img = new Image();
+                img.src = '../Logo.png';
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+                doc.addImage(img, 'PNG', pageWidth - 100, 20, 60, 60);
+            } catch (e) {}
+            // Title
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.setTextColor(28, 73, 128);
+            doc.text('MCQ Question Bank', 40, y);
+            y += 40;
+            // Group by subdomain
+            const groupedData = {};
+            csvData.forEach(row => {
+                if (!groupedData[row['Sub-domain']]) groupedData[row['Sub-domain']] = [];
+                groupedData[row['Sub-domain']].push(row);
+            });
+            let questionNumber = 1;
+            for (const [subdomain, questions] of Object.entries(groupedData)) {
+                if (y > 700) { doc.addPage(); y = 60; }
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.setTextColor(28, 73, 128);
+                doc.text(`Sub Domain – ${subdomain}`, 40, y);
+                y += 28;
+                for (const question of questions) {
+                    if (y > 750) { doc.addPage(); y = 60; }
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(12);
+                    doc.setTextColor(28, 73, 128);
+                    doc.text(`Complexity – ${question['Complexity'].charAt(0).toUpperCase() + question['Complexity'].slice(1)}`, 50, y);
+                    y += 18;
+                    doc.setDrawColor(28, 73, 128);
+                    doc.setLineWidth(1);
+                    doc.line(40, y, pageWidth - 40, y);
+                    y += 12;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(12);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(`Q. ${questionNumber}) ${question['Question']}`, 60, y);
+                    y += 18;
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`A) ${question['Choice1']}`, 80, y); y += 16;
+                    doc.text(`B) ${question['Choice2']}`, 80, y); y += 16;
+                    doc.text(`C) ${question['Choice3']}`, 80, y); y += 16;
+                    doc.text(`D) ${question['Choice4']}`, 80, y); y += 24;
+                    questionNumber++;
+                }
+                y += 10;
+            }
+            doc.save('MCQ_Question_Bank.pdf');
+            showSuccess('PDF generated successfully!');
         }
     </script>
     <footer class="footer-legal text-center">
